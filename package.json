@@ -9,9 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@azure/msal-browser": "^4.7.0",
+    "@azure/msal-react": "^3.0.6",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/material": "^6.4.7",
+    "next": "15.2.2",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "next": "15.2.2"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
