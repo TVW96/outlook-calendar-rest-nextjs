@@ -1,12 +1,30 @@
 'use client';
-import { CardMedia, Card, Box, Button, Typography, CardHeader } from "@mui/material";
+import { CardMedia, Card, Box, Button, Typography, CardHeader, CardContent } from "@mui/material";
 import CircularProgress from "@mui/material/CircularProgress";
 import Image from "next/image";
+import { styled, keyframes } from '@mui/material/styles';
 import { useEffect } from "react";
 import { useState } from "react";
 import { useMsal } from "@azure/msal-react";
 import { loginRequest, msalConfig, graphConfig } from "../utilities/authConfig";
 import { callMsGraph, getCalendarEvents, updateCalendarEvent } from "../utilities/graph";
+
+const scroll = keyframes`
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+`;
+
+const Title = styled(Typography)`
+  white-space: nowrap;
+  overflow: hidden;
+  display: block;
+  animation: ${props => (props.isHovered ? 'none' : `${scroll} 10s linear infinite`)};
+  font-family: 'font-sans';
+`;
 
 export default function Home() {
   const [userToken, setUserToken] = useState(null);
@@ -23,11 +41,16 @@ export default function Home() {
       // Set and store the user token
       setUserToken(response.accessToken);
       localStorage.setItem("msal.idtoken", response.accessToken);
-      // Fetch user data and calendar events
+      // Fetch user data
       const userData = await callMsGraph(response.accessToken);
       setUserInfo(userData);
+      // Fetch calendar events
       const calendar = await getCalendarEvents(response.accessToken);
       setCalendarEvents(calendar);
+
+
+      console.log("User data: ", userData);
+      console.log("Calendar events: ", calendar);
     } catch (error) {
       console.error(error);
     }
@@ -55,17 +78,6 @@ export default function Home() {
     );
   }
 
-  const calendar = calendarEvents && calendarEvents.length > 0 ? calendarEvents.map((event) => {
-    return (
-      <Card key={event.id}>
-        <CardHeader title={event.subject} />
-        <Typography variant="body1">Start Time: {event.start.dateTime}</Typography>
-        <Typography variant="body1">End Time: {event.end.dateTime}</Typography>
-        <Typography variant="body1">Location: {event.location.displayName}</Typography>
-      </Card>
-    )
-  }) : [];
-
   const logout = async () => {
     try {
       await instance.logoutRedirect(logoutRequest);
@@ -74,22 +86,9 @@ export default function Home() {
     }
   };
 
-  // const titleElement = document.getElementById('title');
-  // if (titleElement) {
-  //   if (isHovered) {
-  //     titleElement.style.animation = 'none';
-  //   } else {
-  //     titleElement.style.animation = 'scroll 10s linear infinite';
-  //   }
-  // }
-
   return (
     <Box sx={{ backgroundImage: 'url(/knight-in-night.jpeg)', backgroundSize: 'cover', height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-      <Box
-      // onMouseEnter={() => setIsHovered(true)}
-      // onMouseLeave={() => setIsHovered(false)}
-      // sx={{cursor: 'pointer'}}
-      >
+      <Box>
         <Typography
           variant="h1"
           id="title"
@@ -97,7 +96,7 @@ export default function Home() {
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             display: 'block',
-            animation: isHovered ? 'none' : 'scroll 10s linear infinite',
+            animation: 'scroll 10s linear infinite',
             fontFamily: 'font-sans',
           }}
         >
@@ -122,26 +121,39 @@ export default function Home() {
               />
             </Button>
           </Card>
-
-          <Box sx={{ marginTop: 2 }}>
-            {calendar.length > 0 ? (
-              calendar
-            ) : (
-              <Typography variant="body1">No calendar events found.</Typography>
-            )}
-          </Box>
         </Box>
       )}
-      <style jsx global>{`
-        @keyframes scroll {
-          0% {
-            transform: translateX(100%);
-          }
-          100% {
-            transform: translateX(-100%);
-          }
-        }
-      `}</style>
+      <Box sx={{ marginTop: 2 }}>
+        <Box>
+          <Typography variant="h4" sx={{ color: "yellow" }}>
+            This app uses Microsoft Graph API to fetch user data and calendar events.
+          </Typography>
+        </Box>
+        {calendarEvents.length > 0 && (
+          <Box sx={{ marginTop: 4 }}>
+            <Typography variant="h4" sx={{ color: "yellow", outline: "1px solid white", width: "fit-content", padding: 1 }}>
+              Calendar Events
+
+              <Box sx={{ height: "600px", overflowY: "scroll", display: "flex", flexDirection: "column-reverse" }}>
+                {calendarEvents.map((event) => {
+                  const startDate = new Date(event.start.dateTime);
+                  const endDate = new Date(event.end.dateTime);
+                  const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+                  return (
+                    <Box key={event.id} sx={{ marginTop: 2, width: "inherit" }}>
+                      <Card sx={{ p: 2 }}>
+                        <Typography variant="body1" fontWeight="bold" >{event.subject}</Typography>
+                        <Typography variant="body2">{startDate.toLocaleDateString(undefined, options)}</Typography>
+                        <Typography variant="body2">{endDate.toLocaleDateString(undefined, options)}</Typography>
+                      </Card>
+                    </Box>
+                  );
+                })}
+              </Box>
+            </Typography>
+          </Box>
+        )}
+      </Box>
     </Box>
   );
 }
