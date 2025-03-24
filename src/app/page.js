@@ -2,66 +2,50 @@
 import { CardMedia, Card, Box, Button, Typography, CardHeader, CardContent } from "@mui/material";
 import CircularProgress from "@mui/material/CircularProgress";
 import Image from "next/image";
-import { styled, keyframes } from '@mui/material/styles';
 import { useEffect } from "react";
-import { useState } from "react";
-import { useMsal } from "@azure/msal-react";
+import { useState, useContext } from "react";
+import { withMsal, useMsal, useIsAuthenticated } from "@azure/msal-react";
 import { loginRequest, msalConfig, graphConfig } from "../utilities/authConfig";
 import { callMsGraph, getCalendarEvents, updateCalendarEvent } from "../utilities/graph";
-
-const scroll = keyframes`
-  0% {
-    transform: translateX(100%);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
-`;
-
-const Title = styled(Typography)`
-  white-space: nowrap;
-  overflow: hidden;
-  display: block;
-  animation: ${props => (props.isHovered ? 'none' : `${scroll} 10s linear infinite`)};
-  font-family: 'font-sans';
-`;
+import Navbar from "../components/Navbar";
+import { AuthContext } from "@/context/AuthContext";
 
 export default function Home() {
-  const [userToken, setUserToken] = useState(null);
+  const { userToken, userInfo, calendar, setUserToken, setUserInfo, setCalendar } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(true);
-  const [isHovered, setIsHovered] = useState(false);
   const { instance } = useMsal();
-  const [userInfo, setUserInfo] = useState(null);
   const [calendarEvents, setCalendarEvents] = useState([]);
   const [updatedEvent, setUpdatedEvent] = useState(null);
 
   const handleLogin = async () => {
     try {
       const response = await instance.loginPopup(loginRequest);
-      // Set and store the user token
+      // Set user token, info, and calendar events
       setUserToken(response.accessToken);
-      localStorage.setItem("msal.idtoken", response.accessToken);
-      // Fetch user data
       const userData = await callMsGraph(response.accessToken);
       setUserInfo(userData);
-      // Fetch calendar events
-      const calendar = await getCalendarEvents(response.accessToken);
-      setCalendarEvents(calendar);
-
-
-      console.log("User data: ", userData);
-      console.log("Calendar events: ", calendar);
+      const calendarEvents = await getCalendarEvents(response.accessToken);
+      setCalendar(calendarEvents);
     } catch (error) {
       console.error(error);
     }
   };
 
-  // Delay the loading spinner for 1.5 seconds
+  // Check if user has authenticated into the App
   useEffect(() => {
+    if (userToken && userInfo && calendar) {
+      setCalendarEvents(calendar);
+      console.log("User data: ", userInfo);
+      console.log("Calendar: ", calendar);
+      console.log("Calendar events: ", calendarEvents);
+
+    } else {
+      console.log("no user data");
+    }
     setTimeout(() => {
       setIsLoading(false);
-    }, 1500);
-  }, []);
+    }, 500);
+  }, [userToken, userInfo, calendar]);
 
   if (isLoading) {
     return (
@@ -78,16 +62,11 @@ export default function Home() {
     );
   }
 
-  const logout = async () => {
-    try {
-      await instance.logoutRedirect(logoutRequest);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   return (
     <Box sx={{ backgroundImage: 'url(/knight-in-night.jpeg)', backgroundSize: 'cover', height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0 }}>
+        <Navbar token={userToken} />
+      </div>
       <Box>
         <Typography
           variant="h1"
@@ -100,11 +79,11 @@ export default function Home() {
             fontFamily: 'font-sans',
           }}
         >
-          Outlook REST Calendar
+          The Outlook REST Calendar
         </Typography>
       </Box>
 
-      {userToken ? (
+      {userInfo ? (
         <Card sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', backgroundColor: "black", color: "white" }}>
           <CardHeader title="User Info" />
           <Typography variant="body1">Welcome, {userInfo?.displayName}</Typography>
@@ -130,7 +109,7 @@ export default function Home() {
           </Typography>
         </Box>
         {calendarEvents.length > 0 && (
-          <Box sx={{ marginTop: 4 }}>
+          <Box sx={{ marginTop: 4, display: "flex", flexdirection: "row", justifyContent: "space-between" }}>
             <Typography variant="h4" sx={{ color: "yellow", outline: "1px solid white", width: "fit-content", padding: 1 }}>
               Calendar Events
 
@@ -151,6 +130,11 @@ export default function Home() {
                 })}
               </Box>
             </Typography>
+            <Box>
+              <Typography variant="h4" sx={{ color: "yellow", outline: "1px solid white", width: "fit-content", padding: 1 }}>
+                Update Calendar Event
+              </Typography>
+            </Box>
           </Box>
         )}
       </Box>
