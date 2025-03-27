@@ -84,17 +84,17 @@ export default function Home() {
             fontSize: '6rem',
           }}
         >
-          The Outlook REST Calendar
+          The REST Calendar
         </Typography>
       </Box>
 
       {userInfo ? (
         <Card sx={{
-          display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', backgroundColor: "black", color: "white", p: 1, minHeight: "100px", width: "300px", margin: "0",
+          display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', backgroundColor: "rgb(0,0,0, 0.5)", color: "white", p: 1, minHeight: "100px", width: "300px", margin: "0",
         }}>
-          <CardHeader title="User Info" />
-          <Typography sx={{ fontSize: "16px" }}>Welcome, {userInfo?.displayName}</Typography>
-          <Typography sx={{ fontSize: "16px" }}>Email: {userInfo?.mail}</Typography>
+          <CardHeader title="Welcome," />
+          <Typography sx={{ fontFamily: "font-sans" }} variant="h5">{userInfo?.displayName}</Typography>
+          {/* <Typography sx={{ fontSize: "16px" }}>Email: {userInfo?.mail}</Typography> */}
         </Card>
       ) : (
         <Box>
@@ -102,24 +102,24 @@ export default function Home() {
             <Button onClick={handleLogin}>
               <CardMedia
                 image="/outlook_rest_calendar.png"
-                title="testing the msal provider"
+                title="click to login"
                 sx={{ width: "400px", height: "200px" }}
               />
             </Button>
           </Card>
+          <Box>
+            <Typography variant="h4" sx={{ color: "white", marginInline: 2, textWrap: "balance", textAlign: "center", maxWidth: "65ch", backgroundColor: "black", padding: 2 }}>
+              This app uses the RESTful Microsoft Graph API to fetch uand update event information from within the Microsoft Outlook calendar service.
+            </Typography>
+          </Box>
         </Box>
-      )}
+      )
+      }
       <Box sx={{ marginTop: 2 }}>
-        <Box>
-          <Typography variant="h4" sx={{ color: "yellow", marginInline: 2 }}>
-            This app uses Microsoft Graph API to fetch user info and calendar events.
-          </Typography>
-        </Box>
         {calendarEvents.length > 0 && (
           <Box sx={{ marginBlock: 4, marginInline: 2, display: "flex", flexdirection: "row", justifyContent: "space-between" }}>
             <Typography variant="h4" sx={{ color: "yellow", outline: "1px solid white", width: "fit-content", padding: 1 }}>
               Calendar Events
-
               <Box sx={{ height: "600px", overflowY: "scroll", display: "flex", flexDirection: "column-reverse" }}>
                 {calendarEvents.map((event) => {
                   const startDate = new Date(event.start.dateTime);
@@ -142,7 +142,7 @@ export default function Home() {
               </Box>
             </Typography>
             <Box sx={{ margin: 2, display: "flex", flexDirection: "column", justifyContent: "space-evenly", alignItems: "center" }}>
-              <Button sx={{ textTransform: "none", color: "yellow", outline: "1px solid white", padding: 1, '&:hover': { backgroundColor: "white", color: "blue", borderRadius: "5px", boxShadow: "black 5px 5px 5px" } }} onClick={toggleEventForm}>Update Calendar Event</Button>
+              <Button sx={{ marginInline: "100px", width: "200px", textTransform: "none", color: "yellow", outline: "1px solid white", padding: 1, '&:hover': { backgroundColor: "white", color: "blue", borderRadius: "5px", boxShadow: "black 5px 5px 5px" } }} onClick={toggleEventForm}>Update Calendar Event</Button>
               {isFormVisible && (
                 <Box sx={{ backgroundColor: "white", color: "black", padding: 4, borderRadius: 2, boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.25)", zIndex: 1000 }}>
                   <TextField
@@ -178,7 +178,7 @@ export default function Home() {
                       variant="contained"
                       color="primary"
                       onClick={() => {
-                        updateCalendarEvent(userToken, updatedEvent);
+                        updateCalendarEvent(userToken, updatedEvent.id, updatedEvent);
                         setUpdatedEvent(null);
                         setIsFormVisible(false);
                       }}
@@ -211,6 +211,6 @@ export default function Home() {
           </Box>
         )}
       </Box>
-    </Box>
+    </Box >
   );
 }
