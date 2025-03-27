@@ -1,5 +1,5 @@
 'use client';
-import { CardMedia, Card, Box, Button, Typography, CardHeader, CardContent } from "@mui/material";
+import { CardMedia, Card, Box, Button, Typography, CardHeader, TextField } from "@mui/material";
 import CircularProgress from "@mui/material/CircularProgress";
 import Image from "next/image";
 import { useState, useContext, useEffect } from "react";
@@ -68,7 +68,7 @@ export default function Home() {
   }
 
   return (
-    <Box sx={{ backgroundImage: 'url(/knight-in-night.jpeg)', backgroundSize: 'cover', height: '100vh', width: "100vw", display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+    <Box sx={{ backgroundImage: 'url(/knight-in-night.jpeg)', backgroundSize: 'cover', height: '100%', minHeight: "100vh", width: "100%", display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
       <Box sx={{ position: 'fixed', top: 0, right: 0, zIndex: 1000 }}>
         <Navbar token={userToken} />
       </Box>
@@ -129,11 +129,12 @@ export default function Home() {
                     <Box key={event.id} sx={{ marginTop: 2, width: "inherit" }}>
                       <Card
                         sx={{ p: 2, '&:hover': { backgroundColor: "white", color: "black", cursor: "pointer" }, backgroundColor: "black", color: "white" }}
-                        onClick={() => setUpdatedEvent({ id: event.id, subject: event.subject, start: event.start, end: event.end })}
+                        onClick={() => setUpdatedEvent({ id: event.id, subject: event.subject, bodyPreview: event.bodyPreview, start: event.start, end: event.end })}
                       >
                         <Typography variant="body1" fontWeight="bold" >{event.subject}</Typography>
                         <Typography variant="body2">Start: {startDate.toLocaleDateString(undefined, options)}</Typography>
                         <Typography variant="body2">End: {endDate.toLocaleDateString(undefined, options)}</Typography>
+                        <Typography variant="body2">Details: {event.bodyPreview}</Typography>
                       </Card>
                     </Box>
                   );
@@ -144,26 +145,66 @@ export default function Home() {
               <Button sx={{ textTransform: "none", color: "yellow", outline: "1px solid white", padding: 1, '&:hover': { backgroundColor: "white", color: "blue", borderRadius: "5px", boxShadow: "black 5px 5px 5px" } }} onClick={toggleEventForm}>Update Calendar Event</Button>
               {isFormVisible && (
                 <Box sx={{ backgroundColor: "white", color: "black", padding: 4, borderRadius: 2, boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.25)", zIndex: 1000 }}>
-                  <Typography variant="h5" sx={{ marginBottom: 2 }}>Edit Calendar Event</Typography>
-                  <form onSubmit={(e) => { e.preventDefault(); updatedEvent && updateCalendarEvent(userToken, updatedEvent).then(() => alert("Event updated successfully!")).catch(console.error).finally(() => setIsFormVisible(false)); }}>
-                    {["id", "subject"].map((field) => (
-                      <Box key={field} sx={{ marginBottom: 2 }}>
-                        <Typography variant="body1">{field}:</Typography>
-                        <input type="text" value={updatedEvent?.[field] || ""} onChange={(e) => setUpdatedEvent({ ...updatedEvent, [field]: e.target.value })} style={{ width: "100%", padding: "8px" }} required />
-                      </Box>
-                    ))}
-                    {["start", "end"].map((field) => (
-                      <Box key={field} sx={{ marginBottom: 2 }}>
-                        <Typography variant="body1">{field} Date:</Typography>
-                        <input type="datetime-local" value={updatedEvent?.[field]?.dateTime || ""} onChange={(e) => setUpdatedEvent({ ...updatedEvent, [field]: { dateTime: e.target.value } })} style={{ width: "100%", padding: "8px" }} required />
-                      </Box>
-                    ))}
-                    <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                      <Button type="submit" variant="contained" color="primary">Update</Button>
-                      <Button variant="contained" color="secondary" onClick={() => updatedEvent?.id && updateCalendarEvent(userToken, updatedEvent.id, true).then(() => alert("Event deleted successfully!")).catch(console.error).finally(() => setIsFormVisible(false))}>Delete</Button>
-                    </Box>
-                  </form>
-                  <Button sx={{ marginTop: 2 }} onClick={() => setIsFormVisible(false)}>Close</Button>
+                  <TextField
+                    label="Subject"
+                    variant="outlined"
+                    fullWidth
+                    value={updatedEvent?.subject || ""}
+                    onChange={(e) => setUpdatedEvent({ ...updatedEvent, subject: e.target.value })}
+                  />
+                  <TextField
+                    label="Start Date"
+                    variant="outlined"
+                    fullWidth
+                    value={updatedEvent?.start?.dateTime || ""}
+                    onChange={(e) => setUpdatedEvent({ ...updatedEvent, start: { ...updatedEvent.start, dateTime: e.target.value } })}
+                  />
+                  <TextField
+                    label="End Date"
+                    variant="outlined"
+                    fullWidth
+                    value={updatedEvent?.end?.dateTime || ""}
+                    onChange={(e) => setUpdatedEvent({ ...updatedEvent, end: { ...updatedEvent.end, dateTime: e.target.value } })}
+                  />
+                  <TextField
+                    label="Body Preview"
+                    variant="outlined"
+                    fullWidth
+                    value={updatedEvent?.bodyPreview || ""}
+                    onChange={(e) => setUpdatedEvent({ ...updatedEvent, bodyPreview: e.target.value })}
+                  />
+                  <Box sx={{ marginTop: 2 }}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => {
+                        updateCalendarEvent(userToken, updatedEvent);
+                        setUpdatedEvent(null);
+                        setIsFormVisible(false);
+                      }}
+                    >
+                      Update Event
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => {
+                        setIsFormVisible(false);
+                      }}
+                    >
+                      Delete Event
+                    </Button>
+                  </Box>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={() => {
+                      setUpdatedEvent(null);
+                      setIsFormVisible(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
                 </Box>
               )}
             </Box>
